@@ -1,6 +1,5 @@
 package com.xmcc.service.impl;
 
-import com.xmcc.common.ProductEnums;
 import com.xmcc.common.ResultEnums;
 import com.xmcc.common.ResultResponse;
 import com.xmcc.dto.ProductCategoryDto;
