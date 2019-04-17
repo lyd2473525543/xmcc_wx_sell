@@ -9,11 +9,13 @@ import com.xmcc.entity.ProductInfo;
 import com.xmcc.repository.ProductCategoryRepository;
 import com.xmcc.repository.ProductInfoRepository;
 import com.xmcc.service.ProductInfoService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,5 +53,29 @@ public class ProductInfoServiceImpl implements ProductInfoService {
         }).collect(Collectors.toList());
 
         return ResultResponse.success(dtoList);
+    }
+
+    @Override
+    public ResultResponse<ProductInfo> findById(String productId) {
+        //使用common-lang3的类,判断productId是否正确
+        if (StringUtils.isBlank(productId)){
+            return ResultResponse.fail(ResultEnums.PARAM_ERROR.getMsg() + ":" + productId);
+        }
+        Optional<ProductInfo> productInfo = productInfoRepository.findById(productId);
+        //判断productInfo是否存在
+        if (!productInfo.isPresent()){
+            return ResultResponse.fail(productId + ":" + ResultEnums.NOT_EXITS.getMsg());
+        }
+        ProductInfo info = productInfo.get();
+        //判断商品是否下架
+        if (info.getProductStatus() == ResultEnums.PRODUCT_DOWN.getCode()){
+            return ResultResponse.fail(ResultEnums.PRODUCT_DOWN.getMsg());
+        }
+        return ResultResponse.success(info);
+    }
+
+    @Override
+    public void updateProduct(ProductInfo productInfo) {
+        productInfoRepository.save(productInfo);
     }
 }
