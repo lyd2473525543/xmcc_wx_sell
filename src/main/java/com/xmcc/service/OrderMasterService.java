@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface OrderMasterService {
-    ResultResponse insertOrder(OrderMasterDto orderMasterDto);
+    ResultResponse insertOrder(OrderMasterDto orderMasterDto);//插入订单
 }

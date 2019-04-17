@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface OrderDetailService {
 
-    //批量插入
+    //批量插入订单项
     void batchInsert(List<OrderDetail> list);
 }
