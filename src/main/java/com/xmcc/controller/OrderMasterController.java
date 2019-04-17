@@ -3,12 +3,14 @@ package com.xmcc.controller;
 import com.google.common.collect.Maps;
 import com.xmcc.common.ResultResponse;
 import com.xmcc.dto.OrderMasterDto;
+import com.xmcc.dto.PageDto;
 import com.xmcc.service.OrderMasterService;
 import com.xmcc.utils.JsonUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,4 +45,20 @@ public class OrderMasterController {
         return orderMasterService.insertOrder(orderMasterDto);
     }
 
+    @RequestMapping("/list")
+    @ApiOperation(value = "获取订单列表",httpMethod = "GET",response = ResultResponse.class)
+    public ResultResponse getOrderList(
+            @Valid @ApiParam(name = "分页对象",value = "JSON",required = true) PageDto pageDto
+            , BindingResult bindingResult){
+        Map<String, String> map = Maps.newHashMap();
+        //判断是否有参数校验问题
+        if (bindingResult.hasErrors()){
+            List<String> errList = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getDefaultMessage())
+                    .collect(Collectors.toList());
+            map.put("参数校验错误", JsonUtil.object2string(errList));
+            //将参数校验的错误信息返回给前台
+            return ResultResponse.fail(map);
+        }
+        return orderMasterService.findOrder(pageDto);
+    }
 }

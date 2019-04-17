@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.xmcc.common.*;
 import com.xmcc.dto.OrderDetailDto;
 import com.xmcc.dto.OrderMasterDto;
+import com.xmcc.dto.PageDto;
 import com.xmcc.entity.OrderDetail;
 import com.xmcc.entity.OrderMaster;
 import com.xmcc.entity.ProductInfo;
@@ -16,6 +17,8 @@ import com.xmcc.service.ProductInfoService;
 import com.xmcc.utils.BigDecimalUtil;
 import com.xmcc.utils.IDUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,5 +96,18 @@ public class OrderMasterServiceImpl implements OrderMasterService {
         //按照前台要求的数据结构传入
         hashMap.put("orderId",orderId);
         return ResultResponse.success(hashMap);
+    }
+
+    @Override
+    public ResultResponse findOrder(PageDto pageDto) {
+        if (pageDto.getPage() == null){
+            pageDto.setPage(0);
+        }
+        if (pageDto.getSize() == null){
+            pageDto.setSize(10);
+        }
+        Pageable pageable = PageRequest.of(pageDto.getPage(),pageDto.getSize());
+        List<OrderMaster> orderMasterList = orderMasterRepository.findAllByBuyerOpenid(pageDto.getOpenid(), pageable);
+        return ResultResponse.success(orderMasterList);
     }
 }
