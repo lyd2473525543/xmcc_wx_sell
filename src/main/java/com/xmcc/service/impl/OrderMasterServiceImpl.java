@@ -5,11 +5,13 @@ import com.google.common.collect.Maps;
 import com.xmcc.common.*;
 import com.xmcc.dto.OrderDetailDto;
 import com.xmcc.dto.OrderMasterDto;
+import com.xmcc.dto.OrderMasterInfoDto;
 import com.xmcc.dto.PageDto;
 import com.xmcc.entity.OrderDetail;
 import com.xmcc.entity.OrderMaster;
 import com.xmcc.entity.ProductInfo;
 import com.xmcc.exception.CustomException;
+import com.xmcc.repository.OrderDetailRepository;
 import com.xmcc.repository.OrderMasterRepository;
 import com.xmcc.service.OrderDetailService;
 import com.xmcc.service.OrderMasterService;
@@ -37,6 +39,8 @@ public class OrderMasterServiceImpl implements OrderMasterService {
     private OrderDetailService orderDetailService;
     @Autowired
     private OrderMasterRepository orderMasterRepository;
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
 
     @Override
     @Transactional
@@ -100,14 +104,46 @@ public class OrderMasterServiceImpl implements OrderMasterService {
 
     @Override
     public ResultResponse findOrder(PageDto pageDto) {
-        if (pageDto.getPage() == null){
-            pageDto.setPage(0);
-        }
-        if (pageDto.getSize() == null){
-            pageDto.setSize(10);
-        }
         Pageable pageable = PageRequest.of(pageDto.getPage(),pageDto.getSize());
         List<OrderMaster> orderMasterList = orderMasterRepository.findAllByBuyerOpenid(pageDto.getOpenid(), pageable);
         return ResultResponse.success(orderMasterList);
+    }
+
+    @Override
+    public ResultResponse getDetailedOrder(String openid, String orderId) {
+        //获取订单信息
+        OrderMaster orderMaster = orderMasterRepository.findByBuyerOpenidAndOrderId(openid, orderId);
+        //判断订单是否存在
+        if (orderMaster == null){
+            return ResultResponse.fail(OrderEnums.ORDER_NOT_EXITS.getMsg());
+        }
+        //根据订单id查询订单项信息
+        List<OrderDetail> orderDetail = orderDetailRepository.findByOrderId(orderId);
+        //转为dto
+        OrderMasterInfoDto masterInfoDto = OrderMasterInfoDto.build(orderMaster);
+        masterInfoDto.setOrderDetailList(orderDetail);
+        return ResultResponse.success(masterInfoDto);
+    }
+
+    @Override
+    public ResultResponse delOrder(String openid, String orderId) {
+        //获取订单信息
+        OrderMaster orderMaster = orderMasterRepository.findByBuyerOpenidAndOrderId(openid, orderId);
+        //判断订单是否存在
+        if (orderMaster == null){
+            return ResultResponse.fail(OrderEnums.ORDER_NOT_EXITS.getMsg());
+        }
+        //判断订单的状态，等于1，订单以完成。等于2，订单以取消
+        if (orderMaster.getOrderStatus() == OrderEnums.FINSH.getCode()){
+            return ResultResponse.fail(OrderEnums.FINSH_CANCEL.getMsg());
+        }
+        if (orderMaster.getOrderStatus() == OrderEnums.CANCEL.getCode()){
+            return ResultResponse.fail(OrderEnums.FINSH_CANCEL.getMsg());
+        }
+        //改变订单状态
+        orderMaster.setOrderStatus(OrderEnums.CANCEL.getCode());
+        //修改数据库
+        orderMasterRepository.save(orderMaster);
+        return ResultResponse.success(OrderEnums.CANCEL.getMsg());
     }
 }

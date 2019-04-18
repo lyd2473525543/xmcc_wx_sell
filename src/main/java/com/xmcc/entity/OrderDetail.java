@@ -1,7 +1,9 @@
 package com.xmcc.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -13,6 +15,8 @@ import java.math.BigDecimal;
 @Entity
 @Builder
 @Table(name = "order_detail")//表名
+@AllArgsConstructor
+@NoArgsConstructor
 public class OrderDetail implements Serializable {
     @Id
     private String detailId;

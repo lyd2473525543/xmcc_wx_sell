@@ -61,4 +61,16 @@ public class OrderMasterController {
         }
         return orderMasterService.findOrder(pageDto);
     }
+
+    @RequestMapping("/detail")
+    @ApiOperation(value = "获取订单详情",httpMethod = "GET",response = ResultResponse.class)
+    public ResultResponse getDetailedOrder(String openid,String orderId){
+        return orderMasterService.getDetailedOrder(openid,orderId);
+    }
+
+    @RequestMapping("/cancel")
+    @ApiOperation(value = "取消订单",httpMethod = "POST",response = ResultResponse.class)
+    public ResultResponse delOrder(String openid,String orderId){
+        return orderMasterService.delOrder(openid,orderId);
+    }
 }

@@ -10,4 +10,6 @@ import java.util.List;
 
 public interface OrderMasterRepository extends JpaRepository<OrderMaster,String>,JpaSpecificationExecutor<OrderMaster> {
     List<OrderMaster> findAllByBuyerOpenid(String openid, Pageable pageable);
+
+    OrderMaster findByBuyerOpenidAndOrderId(String openid,String orderId);
 }
