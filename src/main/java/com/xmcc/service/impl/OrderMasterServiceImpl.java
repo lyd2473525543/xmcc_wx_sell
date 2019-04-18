@@ -126,6 +126,7 @@ public class OrderMasterServiceImpl implements OrderMasterService {
     }
 
     @Override
+    @Transactional
     public ResultResponse delOrder(String openid, String orderId) {
         //获取订单信息
         OrderMaster orderMaster = orderMasterRepository.findByBuyerOpenidAndOrderId(openid, orderId);
@@ -139,6 +140,23 @@ public class OrderMasterServiceImpl implements OrderMasterService {
         }
         if (orderMaster.getOrderStatus() == OrderEnums.CANCEL.getCode()){
             return ResultResponse.fail(OrderEnums.FINSH_CANCEL.getMsg());
+        }
+        //获取订单项信息
+        List<OrderDetail> orderDetailList = orderDetailRepository.findByOrderId(orderId);
+//        List<String> productId = orderDetailList.stream().map(orderDetail -> orderDetail.getProductId()).collect(Collectors.toList());
+        for (OrderDetail orderDetail:orderDetailList){
+            //查询订单
+            ResultResponse<ProductInfo> productInfoById = productInfoService.findById(orderDetail.getProductId());
+            //判断productInfoById的code
+            if (productInfoById.getCode() == ResultEnums.FAIL.getCode()){
+                throw new CustomException(productInfoById.getMsg());
+            }
+            //获取查询的商品
+            ProductInfo productInfo = productInfoById.getData();
+            //还原商品库存
+            productInfo.setProductStock(productInfo.getProductStock() + orderDetail.getProductQuantity());
+            //更新商品信息
+            productInfoService.updateProduct(productInfo);
         }
         //改变订单状态
         orderMaster.setOrderStatus(OrderEnums.CANCEL.getCode());
