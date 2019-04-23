@@ -15,6 +15,7 @@ import com.xmcc.repository.OrderDetailRepository;
 import com.xmcc.repository.OrderMasterRepository;
 import com.xmcc.service.OrderDetailService;
 import com.xmcc.service.OrderMasterService;
+import com.xmcc.service.PayService;
 import com.xmcc.service.ProductInfoService;
 import com.xmcc.utils.BigDecimalUtil;
 import com.xmcc.utils.IDUtils;
@@ -41,6 +42,8 @@ public class OrderMasterServiceImpl implements OrderMasterService {
     private OrderMasterRepository orderMasterRepository;
     @Autowired
     private OrderDetailRepository orderDetailRepository;
+    @Autowired
+    private PayService payService;
 
     @Override
     @Transactional
@@ -143,7 +146,6 @@ public class OrderMasterServiceImpl implements OrderMasterService {
         }
         //获取订单项信息
         List<OrderDetail> orderDetailList = orderDetailRepository.findByOrderId(orderId);
-//        List<String> productId = orderDetailList.stream().map(orderDetail -> orderDetail.getProductId()).collect(Collectors.toList());
         for (OrderDetail orderDetail:orderDetailList){
             //查询订单
             ResultResponse<ProductInfo> productInfoById = productInfoService.findById(orderDetail.getProductId());
@@ -160,6 +162,10 @@ public class OrderMasterServiceImpl implements OrderMasterService {
         }
         //改变订单状态
         orderMaster.setOrderStatus(OrderEnums.CANCEL.getCode());
+        //判断是否已经支付，若已经支付，执行退款
+        if (orderMaster.getPayStatus() == PayEnums.FINISH.getCode()){
+            payService.refund(orderMaster);
+        }
         //修改数据库
         orderMasterRepository.save(orderMaster);
         return ResultResponse.success(OrderEnums.CANCEL.getMsg());
